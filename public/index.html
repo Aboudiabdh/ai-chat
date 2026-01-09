@@ -1,71 +1,150 @@
 <!DOCTYPE html>
-<html lang="ar">
+<html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>دردشة AI حقيقية</title>
+<title>AI Chat</title>
+
 <style>
-body { font-family: Arial; background:#f0f0f0; display:flex; justify-content:center; align-items:center; height:100vh; margin:0; }
-#chat-container{width:90%; max-width:500px; background:#fff; border-radius:10px; padding:20px; display:flex; flex-direction:column; height:80vh; box-shadow:0 5px 15px rgba(0,0,0,0.2);}
-#messages{flex:1; overflow-y:auto; margin-bottom:10px; border:1px solid #ddd; padding:10px; border-radius:8px; background:#fafafa;}
-.message{margin:5px 0; padding:8px 12px; border-radius:15px; max-width:80%; word-wrap:break-word;}
-.user{background:#4CAF50; color:white; align-self:flex-end;}
-.ai{background:#eee; color:#333; align-self:flex-start;}
-#input-container{display:flex;}
-#user-input{flex:1; padding:10px; border-radius:5px; border:1px solid #ccc; font-size:16px;}
-#send-btn{padding:10px 15px; margin-left:5px; background:#4CAF50; color:white; border:none; border-radius:5px; cursor:pointer;}
-#send-btn:hover{background:#45a049;}
+* {
+  box-sizing: border-box;
+  font-family: Arial, sans-serif;
+}
+
+body {
+  margin: 0;
+  background: #0f172a;
+  color: #fff;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ===== Header ===== */
+header {
+  background: #020617;
+  padding: 15px;
+  text-align: center;
+  font-size: 18px;
+  font-weight: bold;
+  border-bottom: 1px solid #1e293b;
+}
+
+/* ===== Chat Area ===== */
+#chat {
+  flex: 1;
+  padding: 15px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* ===== Message ===== */
+.message {
+  max-width: 80%;
+  padding: 12px 15px;
+  border-radius: 15px;
+  line-height: 1.6;
+  word-wrap: break-word;
+}
+
+/* User */
+.user {
+  align-self: flex-end;
+  background: #22c55e;
+  color: #022c22;
+  border-bottom-right-radius: 5px;
+}
+
+/* AI */
+.ai {
+  align-self: flex-start;
+  background: #1e293b;
+  color: #e5e7eb;
+  border-bottom-left-radius: 5px;
+}
+
+/* ===== Input Area ===== */
+#input-area {
+  display: flex;
+  padding: 10px;
+  background: #020617;
+  border-top: 1px solid #1e293b;
+}
+
+#msg {
+  flex: 1;
+  padding: 12px;
+  border-radius: 10px;
+  border: none;
+  outline: none;
+  font-size: 16px;
+}
+
+button {
+  margin-right: 10px;
+  padding: 12px 18px;
+  background: #22c55e;
+  color: #022c22;
+  border: none;
+  border-radius: 10px;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+button:active {
+  opacity: 0.8;
+}
 </style>
 </head>
+
 <body>
-<div id="chat-container">
-  <div id="messages"></div>
-  <div id="input-container">
-    <input type="text" id="user-input" placeholder="اكتب رسالتك هنا...">
-    <button id="send-btn">إرسال</button>
-  </div>
+
+<header>🤖 AI Chat</header>
+
+<div id="chat"></div>
+
+<div id="input-area">
+  <button onclick="send()">إرسال</button>
+  <input id="msg" placeholder="اكتب رسالتك هنا..." onkeydown="if(event.key==='Enter') send()">
 </div>
 
 <script>
-const messages = document.getElementById("messages");
-const userInput = document.getElementById("user-input");
-const sendBtn = document.getElementById("send-btn");
+const chat = document.getElementById("chat");
+const input = document.getElementById("msg");
 
-async function getAIResponse(text) {
+function addMessage(text, type) {
+  const div = document.createElement("div");
+  div.className = `message ${type}`;
+  div.textContent = text;
+  chat.appendChild(div);
+  chat.scrollTop = chat.scrollHeight;
+}
+
+async function send() {
+  const text = input.value.trim();
+  if (!text) return;
+
+  addMessage(text, "user");
+  input.value = "";
+
+  addMessage("⏳ جاري التفكير...", "ai");
+
   try {
     const res = await fetch("/chat", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ message: text })
     });
+
     const data = await res.json();
-    return data.reply;
-  } catch (error) {
-    console.error(error);
-    return "حدث خطأ في التواصل مع السيرفر.";
+    chat.lastChild.textContent = data.reply;
+  } catch (e) {
+    chat.lastChild.textContent = "❌ حدث خطأ";
   }
 }
-
-function addMessage(text, sender) {
-  const div = document.createElement("div");
-  div.className = "message " + sender;
-  div.textContent = text;
-  messages.appendChild(div);
-  messages.scrollTop = messages.scrollHeight;
-}
-
-sendBtn.addEventListener("click", async () => {
-  const text = userInput.value.trim();
-  if(!text) return;
-  addMessage(text, "user");
-  userInput.value = "";
-  const aiReply = await getAIResponse(text);
-  addMessage(aiReply, "ai");
-});
-
-userInput.addEventListener("keypress", (e) => {
-  if(e.key === "Enter") sendBtn.click();
-});
 </script>
+
 </body>
-  </html>
+</html>
