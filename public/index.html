@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>دردشة AI حقيقية</title>
+<style>
+body { font-family: Arial; background:#f0f0f0; display:flex; justify-content:center; align-items:center; height:100vh; margin:0; }
+#chat-container{width:90%; max-width:500px; background:#fff; border-radius:10px; padding:20px; display:flex; flex-direction:column; height:80vh; box-shadow:0 5px 15px rgba(0,0,0,0.2);}
+#messages{flex:1; overflow-y:auto; margin-bottom:10px; border:1px solid #ddd; padding:10px; border-radius:8px; background:#fafafa;}
+.message{margin:5px 0; padding:8px 12px; border-radius:15px; max-width:80%; word-wrap:break-word;}
+.user{background:#4CAF50; color:white; align-self:flex-end;}
+.ai{background:#eee; color:#333; align-self:flex-start;}
+#input-container{display:flex;}
+#user-input{flex:1; padding:10px; border-radius:5px; border:1px solid #ccc; font-size:16px;}
+#send-btn{padding:10px 15px; margin-left:5px; background:#4CAF50; color:white; border:none; border-radius:5px; cursor:pointer;}
+#send-btn:hover{background:#45a049;}
+</style>
+</head>
+<body>
+<div id="chat-container">
+  <div id="messages"></div>
+  <div id="input-container">
+    <input type="text" id="user-input" placeholder="اكتب رسالتك هنا...">
+    <button id="send-btn">إرسال</button>
+  </div>
+</div>
+
+<script>
+const messages = document.getElementById("messages");
+const userInput = document.getElementById("user-input");
+const sendBtn = document.getElementById("send-btn");
+
+async function getAIResponse(text) {
+  try {
+    const res = await fetch("/chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ message: text })
+    });
+    const data = await res.json();
+    return data.reply;
+  } catch (error) {
+    console.error(error);
+    return "حدث خطأ في التواصل مع السيرفر.";
+  }
+}
+
+function addMessage(text, sender) {
+  const div = document.createElement("div");
+  div.className = "message " + sender;
+  div.textContent = text;
+  messages.appendChild(div);
+  messages.scrollTop = messages.scrollHeight;
+}
+
+sendBtn.addEventListener("click", async () => {
+  const text = userInput.value.trim();
+  if(!text) return;
+  addMessage(text, "user");
+  userInput.value = "";
+  const aiReply = await getAIResponse(text);
+  addMessage(aiReply, "ai");
+});
+
+userInput.addEventListener("keypress", (e) => {
+  if(e.key === "Enter") sendBtn.click();
+});
+</script>
+</body>
+  </html>
